@@ -1,33 +1,37 @@
 class ApplicationsController < ApplicationController
-  before_action :set_application, only: %i[ show update destroy ]
+  before_action :set_application, only: %i[ show update ]
 
   # GET /applications
   def index
-    @applications = Application.all
+    @applications = Application.select("token", "name", "chats_count")
 
-    render json: @applications
+    render json: @applications, only: [:name, :token, :chats_count]
   end
 
-  # GET /applications/1
+  # GET /applications/token
   def show
-    render json: @application
+    render json: @application, only: [:name, :chats_count]
   end
 
   # POST /applications
   def create
-    @application = Application.new(application_params)
-
-    if @application.save
-      render json: @application, status: :created, location: @application
+    token = SecureRandom.uuid
+    # new_params = JSON::parse(application_params.to_json)
+    if new_params = application_params
+      new_params['token'] = token
+      new_params['previous_request_timestamp'] = DateTime.now
+      ApplicationsCreationWorker.perform_async(new_params.to_json)
+      render json: {"token": token}
     else
       render json: @application.errors, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /applications/1
+  # PATCH/PUT /applications/token
   def update
-    if @application.update(application_params)
-      render json: @application
+    if new_params = application_params
+      ApplicationsUpdateWorker.perform_async(params[:id], new_params.to_json)
+      render :json => {:status => "Update in progress."}
     else
       render json: @application.errors, status: :unprocessable_entity
     end
@@ -36,11 +40,11 @@ class ApplicationsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_application
-      @application = Application.find(params[:id])
+      @application = Application.where(token: params[:id])
     end
 
     # Only allow a list of trusted parameters through.
     def application_params
-      params.require(:application).permit(:token, :name, :chats_count, :previous_request_timestamp)
+      params.require(:application).permit(:name)
     end
 end
