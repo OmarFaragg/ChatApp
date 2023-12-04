@@ -1,5 +1,5 @@
 class Application < ApplicationRecord
-    has_many: chats
+    has_many :chats
     before_create :init
 
     def init

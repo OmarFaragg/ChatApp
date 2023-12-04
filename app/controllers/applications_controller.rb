@@ -17,24 +17,20 @@ class ApplicationsController < ApplicationController
   def create
     token = SecureRandom.uuid
     # new_params = JSON::parse(application_params.to_json)
-    if new_params = application_params
-      new_params['token'] = token
-      new_params['previous_request_timestamp'] = DateTime.now
-      ApplicationsCreationWorker.perform_async(new_params.to_json)
-      render json: {"token": token}
-    else
-      render json: @application.errors, status: :unprocessable_entity
-    end
+    new_params = application_params
+    new_params['token'] = token
+    new_params['previous_request_timestamp'] = DateTime.now
+    ApplicationsCreationWorker.perform_async(new_params.to_json)
+    render json: {"token": token}
+    
   end
 
   # PATCH/PUT /applications/token
   def update
-    if new_params = application_params
-      ApplicationsUpdateWorker.perform_async(params[:id], new_params.to_json)
-      render :json => {:status => "Update in progress."}
-    else
-      render json: @application.errors, status: :unprocessable_entity
-    end
+    new_params = application_params
+    ApplicationsUpdateWorker.perform_async(params[:id], new_params.to_json)
+    render :json => {"status" => "Update in progress."}
+  
   end
 
   private
