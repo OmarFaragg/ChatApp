@@ -2,7 +2,6 @@ class CountUpdateWorker
     include Sidekiq::Worker
                                           
     def perform()                     
-        puts "update database count"
         Application.all.each do |application|
             application.update(chats_count: application.chats.size)
             application.chats.all.each do |chat|
