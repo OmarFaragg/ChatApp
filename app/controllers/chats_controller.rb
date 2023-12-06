@@ -1,5 +1,5 @@
 class ChatsController < ApplicationController
-  before_action :set_chat, only: %i[ show index update ]
+  before_action :set_chat, only: %i[ show index update search ]
 
   # GET applications/:application_token/chats
   def index
@@ -33,6 +33,25 @@ class ChatsController < ApplicationController
     render json: {"status": "Update in Progress."}
   end
 
+  # POST applications/:application_token/chats/:number/search/:query
+  def search
+    @chat = Chat.select("id", "number").where(application_id: @application.id, number: params[:id]).first
+    response = Message.search(query:{
+      bool:{
+        must: [
+          {regexp:{
+            body: ".*" + params[:query] + ".*"
+          }},
+        ],
+        filter: [
+          {term: {
+            chat_id: @chat.id
+          }}
+        ]
+      }
+    })
+    render json: response.records.to_json
+  end
 
   private
     # Use callbacks to share common setup or constraints between actions.

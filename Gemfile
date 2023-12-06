@@ -14,6 +14,9 @@ gem "sidekiq"
 gem "mysql2"
 gem "redis"
 gem "sidekiq-cron"
+gem 'elasticsearch-model'
+gem 'elasticsearch-rails'
+gem 'elasticsearch'
 
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"
