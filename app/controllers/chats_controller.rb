@@ -18,9 +18,12 @@ class ChatsController < ApplicationController
   def create
     new_params = chat_params
     if !REDIS.get(params[:application_id]).present?
-      REDIS.set(params[:application_id], Application.where(token: params[:application_id]).fisrt.chats.size)
+      REDIS.set(params[:application_id], Application.where(token: params[:application_id]).first.chats.size)
     end
-    new_params["number"] = REDIS.get(params[:application_id]).to_i + 1
+    REDIS.multi do
+      REDIS.incr(params[:application_id])
+    end
+    new_params["number"] = REDIS.get(params[:application_id]).to_i
     REDIS.set(params[:application_id], new_params["number"])  
     ChatsCreationWorker.perform_async(params[:application_id], new_params.to_json)
     render json: {"number": new_params["number"]}
@@ -36,6 +39,7 @@ class ChatsController < ApplicationController
   # POST applications/:application_token/chats/:number/search/:query
   def search
     @chat = Chat.select("id", "number").where(application_id: @application.id, number: params[:id]).first
+    Message.__elasticsearch__.create_index!
     response = Message.search(query:{
       bool:{
         must: [
@@ -50,7 +54,12 @@ class ChatsController < ApplicationController
         ]
       }
     })
-    render json: response.records.to_json
+
+    res = []
+    response.records.as_json. each do |rec|
+      res.append(rec.except("id", "chat_id", "created_at", "updated_at"))
+    end
+    render json: res
   end
 
   private

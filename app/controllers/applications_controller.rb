@@ -16,10 +16,8 @@ class ApplicationsController < ApplicationController
   # POST /applications
   def create
     token = SecureRandom.uuid
-    # new_params = JSON::parse(application_params.to_json)
     new_params = application_params
     new_params['token'] = token
-    new_params['previous_request_timestamp'] = DateTime.now
     ApplicationsCreationWorker.perform_async(new_params.to_json)
     render json: {"token": token}
     

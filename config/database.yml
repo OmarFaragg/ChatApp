@@ -9,8 +9,9 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
   password: admin
-  host: localhost
+  host: db
   port: 3306
+  socket: /tmp/mysql.sock
 
 development:
   <<: *default
@@ -26,9 +27,9 @@ test:
 
 production:
   <<: *default
-  database: your_database_name_production
-  username: your_mysql_production_username
-  password: your_mysql_production_password
+  database: chat_app_production
+  username: user
+  password: <%= ENV['APP_API_DATABASE_PASSWORD'] %>
 
 
 

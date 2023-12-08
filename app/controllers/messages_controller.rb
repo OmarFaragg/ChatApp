@@ -23,7 +23,10 @@ class MessagesController < ApplicationController
       @chat = Chat.where(application_id: @application.id, number: params[:chat_id]).first
       REDIS.set(redis_key, @chat.messages.size)
     end
-    new_params["number"] = REDIS.get(redis_key).to_i + 1
+    REDIS.multi do
+      REDIS.incr(redis_key)
+    end
+    new_params["number"] = REDIS.get(redis_key).to_i
     REDIS.set(redis_key, new_params["number"])  
     MessagesCreationWorker.perform_async(params[:application_id], params[:chat_id], new_params.to_json)
     render json: {"number": new_params["number"]}
@@ -41,7 +44,7 @@ class MessagesController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_message
       @application = Application.where(token: params[:application_id]).first
-      @chat = Chat.where(application_id: @application.id, number: params[:application_id]).first
+      @chat = Chat.where(application_id: @application.id, number: params[:chat_id]).first
     end
 
     # Only allow a list of trusted parameters through.
