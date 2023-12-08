@@ -24,7 +24,7 @@ class ChatsController < ApplicationController
       REDIS.incr(params[:application_id])
     end
     new_params["number"] = REDIS.get(params[:application_id]).to_i
-    REDIS.set(params[:application_id], new_params["number"])  
+    # REDIS.set(params[:application_id], new_params["number"])  
     ChatsCreationWorker.perform_async(params[:application_id], new_params.to_json)
     render json: {"number": new_params["number"]}
   end

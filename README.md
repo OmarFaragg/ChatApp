@@ -1,24 +1,47 @@
 # README
+## How to run the project
+```
+cd PROJECT_PATH
+docker-compose up
+```
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Database Tables
 
-Things you may want to cover:
+Application: `id`, `token`, `name`, `chats_count`,
 
-* Ruby version
+Chat: `id`, `application_id`, `number`, `title`, `messages_count`
 
-* System dependencies
+Message: `id`, `chat_id`, `number`, `body`
 
-* Configuration
+## Endpoints
+You can find in the project root folder a Postman Collection containing all implemeneted Endpoints with its payloads if required.
 
-* Database creation
+### Applications
+`GET     /applications ` Retrieve all Applications Data.
 
-* Database initialization
+`POST     /applications` Create an Application.
 
-* How to run the test suite
+`GET     /applications/:token` Retrieve an Application's data by its token.
 
-* Services (job queues, cache servers, search engines, etc.)
+`PUT     /applications/:token` Update an Application's data by its token.
 
-* Deployment instructions
+### Chats
 
-* ...
+`GET     /applications/:application_token/chats` Retrieve all Application's Chats Data.
+
+`POST     /applications/:application_token/chats` Create a Chat by its Application's Token.
+
+`GET     /applications/:application_token/chats/:number` Retrieve a Chat data by its number and Application's Token.  
+
+`PUT    /applications/:application_token/chats/:number` Update a Chat by its number and Application's Token.
+
+`POST   /applications/:application_token/chats/:number/search/:query`  Search a specific Chat by a given query.
+
+### Messages [create, update, read]
+`GET     /applications/:application_token/chats/:chat_number/messages` Retrieve all Chat's Messages Data.
+
+`POST     /applications/:application_token/chats/:chat_number/messages` Create a Message by its Application's Token and Chat number.
+
+`GET     /applications/:application_token/chats/:chat_number/messages/:number` Retrieve a Message data by its number and Chat number and Application's Token. 
+
+`PUT     /applications/:application_token/chats/:chat_number/messages/:number` Update a Message by its number and Chat number and Application's Token.

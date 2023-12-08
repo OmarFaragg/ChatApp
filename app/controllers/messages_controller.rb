@@ -27,7 +27,7 @@ class MessagesController < ApplicationController
       REDIS.incr(redis_key)
     end
     new_params["number"] = REDIS.get(redis_key).to_i
-    REDIS.set(redis_key, new_params["number"])  
+    # REDIS.set(redis_key, new_params["number"])  
     MessagesCreationWorker.perform_async(params[:application_id], params[:chat_id], new_params.to_json)
     render json: {"number": new_params["number"]}
   end
