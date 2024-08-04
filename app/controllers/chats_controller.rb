@@ -17,15 +17,16 @@ class ChatsController < ApplicationController
   # POST applications/:application_token/chats/
   def create
     new_params = chat_params
-    if !REDIS.get(params[:application_id]).present?
-      REDIS.set(params[:application_id], Application.where(token: params[:application_id]).first.chats.size)
+    application_id = params[:application_id]
+  
+    unless REDIS.exists(application_id)
+      application = Application.find_by(token: application_id)
+      REDIS.set(application_id, application.chats.size)
     end
-    REDIS.multi do
-      REDIS.incr(params[:application_id])
-    end
-    new_params["number"] = REDIS.get(params[:application_id]).to_i
-    # REDIS.set(params[:application_id], new_params["number"])  
-    ChatsCreationWorker.perform_async(params[:application_id], new_params.to_json)
+
+    new_params["number"] = REDIS.incr(application_id)
+
+    ChatsCreationWorker.perform_async(application_id, new_params.to_json)
     render json: {"number": new_params["number"]}
   end
 

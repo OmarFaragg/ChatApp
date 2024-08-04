@@ -17,19 +17,18 @@ class MessagesController < ApplicationController
   # POST /applications/:application_token/chats/:chat_number/messages
   def create
     new_params = message_params
-    redis_key = params[:application_id] + "." + params[:chat_id]
-    if !REDIS.get(redis_key).present?
-      @application = Application.where(token: params[:application_id]).first
-      @chat = Chat.where(application_id: @application.id, number: params[:chat_id]).first
-      REDIS.set(redis_key, @chat.messages.size)
+    redis_key = "#{params[:application_id]}.#{params[:chat_id]}"
+  
+    unless REDIS.exists(redis_key)
+      application = Application.find_by(token: params[:application_id])
+      chat = Chat.find_by(application_id: application.id, number: params[:chat_id])
+      REDIS.set(redis_key, chat.messages.size)
     end
-    REDIS.multi do
-      REDIS.incr(redis_key)
-    end
-    new_params["number"] = REDIS.get(redis_key).to_i
-    # REDIS.set(redis_key, new_params["number"])  
+    
+    new_params["number"] = REDIS.incr(redis_key)
+  
     MessagesCreationWorker.perform_async(params[:application_id], params[:chat_id], new_params.to_json)
-    render json: {"number": new_params["number"]}
+    render json: { "number": new_params["number"] }
   end
 
   # PATCH/PUT /applications/:application_token/chats/:chat_number/messages/:number
