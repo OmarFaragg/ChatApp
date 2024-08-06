@@ -40,24 +40,30 @@ class ChatsController < ApplicationController
   # POST applications/:application_token/chats/:number/search/:query
   def search
     @chat = Chat.select("id", "number").where(application_id: @application.id, number: params[:id]).first
-    Message.__elasticsearch__.create_index!
-    response = Message.search(query:{
-      bool:{
-        must: [
-          {regexp:{
-            body: ".*" + params[:query] + ".*"
-          }},
-        ],
-        filter: [
-          {term: {
-            chat_id: @chat.id
-          }}
-        ]
+  
+    response = Message.search({
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                body: params[:query]
+              }
+            }
+          ],
+          filter: [
+            {
+              term: {
+                chat_id: @chat.id
+              }
+            }
+          ]
+        }
       }
     })
 
     res = []
-    response.records.as_json. each do |rec|
+    response.records.as_json.each do |rec|
       res.append(rec.except("id", "chat_id", "created_at", "updated_at"))
     end
     render json: res
